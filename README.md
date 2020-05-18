@@ -36,26 +36,15 @@ sudo apt install python3-pip virtualenv
 python3 -m pip install --upgrade pip
 
 ```
-<<<<<<< HEAD
+
 3. Download the templates to the correct location:
 
 - Apache2 templates goes into `/usr/local/hestia/data/templates/web/apache2/`
+- Chage he permissions to `Django_app.sh`: `chmod 755 wsgi_django.sh`
 - NGINX templates goes into `/usr/local/hestia/data/templates/web/nginx/`
 
 4. Activate the template NGINX proxy template
 
 5. Activate the Apache2 template
 
-6. Complete the setup process
-=======
-4. Download the templates to the correct location:
-```bash
-cd /usr/local/hestia/data/templates/web/apache2/php-fpm/
-git clone https://github.com/realjumy/hestiacp-python-templates
-chmod 755 wsgi_django.sh
-```
-Move the files from the subfolder to `php-fpm`
-
-5. Activate the template:
-HestiaCP > Web > Domain > Web Template APACHE2 > wsgi_sjango
->>>>>>> bb367861c34965aaaef0e0cbf366bc120a8a3a0a
+6. Complete the Django setup process
