@@ -25,11 +25,66 @@ gunicorn wsgi.py
 ./manage.py makemigrations && ./manage.py migrate
 
 if [ ! -f /etc/systemd/system/gunicorn.socket]; then
-	# Download the file
+cat >/etc/systemd/system/gunicorn.socket <<EOL
+[Unit]
+Description=gunicorn socket
+
+[Socket]
+ListenStream=/run/gunicorn.sock
+
+[Install]
+WantedBy=sockets.target
+
+EOL
+
 fi
 
 if [ ! -f /etc/systemd/system/gunicorn.service]; then
-	# Download the file
+
+cat >/etc/systemd/system/gunicorn.service <<EOL
+
+[Unit]
+Description=gunicorn daemon
+Requires=gunicorn.socket
+After=network.target
+
+[Service]
+User=${user}
+Group=${user}
+WorkingDirectory=${docroot}/djangoapp
+ExecStart=${docroot}/venv/bin/gunicorn \
+          --access-logfile - \
+          --workers 3 \
+          --bind unix:/run/gunicorn.sock \
+          djangoapp.wsgi:application
+
+[Install]
+WantedBy=multi-user.target
+
+
+EOL
+	
+fi
+
+
+if [ -f /etc/systemd/system/gunicorn.service]; then
+cat >>/etc/systemd/system/gunicorn.service <<EOL
+
+[Service]
+User=${user}
+Group=${user}
+WorkingDirectory=${docroot}/djangoapp
+ExecStart=${docroot}/venv/bin/gunicorn \
+          --access-logfile - \
+          --workers 3 \
+          --bind unix:/run/gunicorn.sock \
+          djangoapp.wsgi:application
+
+[Install]
+WantedBy=multi-user.target
+
+EOL
+
 fi
 
 systemctl restart gunicorn.socket
@@ -56,6 +111,6 @@ chown $user:$user $docroot/.htaccess
 fi
 
 
-echo "Remember to complete the app setup process!" > $docroot/help
+echo "Remember to complete the app setup process! Also, check the content of the file etc/systemd/system/gunicorn.service" > $docroot/help
 
 exit 0
