@@ -23,6 +23,7 @@ cd $docroot/djangoapp
 gunicorn wsgi.py
 
 ./manage.py makemigrations && ./manage.py migrate
+chown $user:$user db.sqlite3
 
 if [ ! -f /etc/systemd/system/gunicorn.socket]; then
 cat >/etc/systemd/system/gunicorn.socket <<EOL

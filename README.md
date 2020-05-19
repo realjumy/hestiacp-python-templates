@@ -39,7 +39,7 @@ python3 -m pip install --upgrade pip
 
 3. Download the templates to the correct location:
 
-- Apache2 templates goes into `/usr/local/hestia/data/templates/web/apache2/php-fpm`
+- Apache2 templates goes into `/usr/local/hestia/data/templates/web/apache2/php-fpm/`
 - Chage he permissions to `Django_app.sh` using the command `chmod 755 wsgi_django.sh`
 - NGINX templates goes into `/usr/local/hestia/data/templates/web/nginx/`
 
