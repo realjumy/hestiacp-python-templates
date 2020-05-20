@@ -39,6 +39,11 @@ cd djangoapp
 ./manage.py makemigrations && ./manage.py migrate
 chown $user:$user db.sqlite3
 
+# Add static folder and run collectstatic
+echo "
+STATIC_ROOT = os.path.join(BASE_DIR, 'static/')" >> djangoapp/settings.py
+./manage.py collectstatic
+
 # At this stage you can test that it works executing:
 # gunicorn -b 0.0.0.0:8000 djangoapp.wsgi:application
 # *after* adding your domain to ALLOWED_HOSTS

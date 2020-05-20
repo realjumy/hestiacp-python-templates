@@ -12,7 +12,7 @@ server {
     location = /favicon.ico { access_log off; log_not_found off; }
 
     location /static/ {
-        root %docroot%/djangoapp;
+        root %home%/%user%/web/%domain%/djangoapp;
     }
 
     location / {
@@ -22,7 +22,7 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_pass      http://unix:/run/gunicorn.sock;
         location ~* ^.+\.(%proxy_extentions%)$ {
-            root           %sdocroot%;
+            root           %home%/%user%/web/%domain%/djangoapp/;
             access_log     /var/log/%web_system%/domains/%domain%.log combined;
             access_log     /var/log/%web_system%/domains/%domain%.bytes bytes;
             expires        max;
@@ -45,5 +45,5 @@ server {
     location ~ /\.bzr/  {return 404;}
 
     include %home%/%user%/conf/web/%domain%/nginx.ssl.conf_*;
-}
 
+}

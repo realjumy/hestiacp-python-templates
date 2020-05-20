@@ -1,13 +1,13 @@
 server {
     listen      %ip%:%proxy_port%;
     server_name %domain_idn% %alias_idn%;
-        
+
     include %home%/%user%/conf/web/%domain%/nginx.forcessl.conf*;
-    
+
     location = /favicon.ico { access_log off; log_not_found off; }
 
     location /static/ {
-        root %docroot%/djangoapp;
+        root %home%/%user%/web/%domain%/djangoapp;
     }
 
     location / {
@@ -17,7 +17,7 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_pass      http://unix:/run/gunicorn.sock;
         location ~* ^.+\.(%proxy_extentions%)$ {
-            root           %docroot%;
+            root           %home%/%user%/web/%domain%/djangoapp/;
             access_log     /var/log/%web_system%/domains/%domain%.log combined;
             access_log     /var/log/%web_system%/domains/%domain%.bytes bytes;
             expires        max;
