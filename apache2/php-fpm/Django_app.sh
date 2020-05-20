@@ -3,115 +3,111 @@
 user="$1"
 domain="$2"
 ip="$3"
+#/home
 home_dir="$4"
+#Full route to /public_html
 docroot="$5"
 
-cd $home_dir $docroot/
+
+workingfolder="/home/$user/web/$domain"
+
+cd $workingfolder
+
+# Create the virtual environment with Python 3
 virtualenv -p python3 venv
+
+# Activate the virtual environment
 source venv/bin/activate
 
-pip install django
-pip install gunicorn
+# Install Django and Gunicorn
+pip install django gunicorn
 
-if [ -f $docroot/djangoapp/app.wsgi ]; then
-	pip install -r $docroot/requirements.txt
+# Create the Django project
+django-admin startproject djangoapp
+
+# Django does not have a requirements.txt file
+# Install requirements.txt in case one is given by the user in
+# the working folder
+if [ -f "$workingfolder/djangoapp/requirements.txt" ]; then
+
+     pip install -r /home/$user/web/$domain/djangoapp/requirements.txt
+
 fi
 
-django-admin startproject djangoapp $docroot
-cd $docroot/djangoapp
-
-gunicorn wsgi.py
-
+# Make Django migration and  change ownership of the created SQLite database
+cd djangoapp
 ./manage.py makemigrations && ./manage.py migrate
 chown $user:$user db.sqlite3
 
-if [ ! -f /etc/systemd/system/gunicorn.socket]; then
-cat >/etc/systemd/system/gunicorn.socket <<EOL
-[Unit]
+# At this stage you can test that it works executing:
+# gunicorn -b 0.0.0.0:8000 djangoapp.wsgi:application
+# *after* adding your domain to ALLOWED_HOSTS
+
+# This following part adds Gunicorn socket and service,
+# and needs to be improved, particularly to allow multiple
+# Django applications running in the same server.
+
+# This is intended for Ubuntu. It will require some testing to check how this works
+# in other distros.
+
+if [ ! -f "/etc/systemd/system/gunicorn.socket" ]; then
+
+echo "[Unit]
 Description=gunicorn socket
 
 [Socket]
 ListenStream=/run/gunicorn.sock
 
 [Install]
-WantedBy=sockets.target
-
-EOL
+WantedBy=sockets.target" > /etc/systemd/system/gunicorn.socket
 
 fi
 
-if [ ! -f /etc/systemd/system/gunicorn.service]; then
+# In case the service exists (this needs to be improved!!!!)
+# I don't know why this is executed afther the next IF when a file doesn't exit
+#if [ -f "/etc/systemd/system/gunicorn.service" ]; then
+#    echo "[Service]
+#User=$user
+#Group=$user
+#WorkingDirectory=$workingfolder/djangoapp
+#ExecStart=$workingfoler/venv/bin/gunicorn --access-logfile - --workers 3 --bind unix:/run/gunicorn.sock djangoapp.wsgi:application
+#
+#[Install]
+#WantedBy=multi-user.target" >> /etc/systemd/system/gunicorn.service
+#
+#fi
 
-cat >/etc/systemd/system/gunicorn.service <<EOL
+# If the service doesn't exist
+if [ ! -f "/etc/systemd/system/gunicorn.service" ]; then
 
-[Unit]
+    echo "[Unit]
 Description=gunicorn daemon
 Requires=gunicorn.socket
 After=network.target
 
 [Service]
-User=${user}
-Group=${user}
-WorkingDirectory=${docroot}/djangoapp
-ExecStart=${docroot}/venv/bin/gunicorn \
-          --access-logfile - \
-          --workers 3 \
-          --bind unix:/run/gunicorn.sock \
-          djangoapp.wsgi:application
+User=$user
+Group=$user
+WorkingDirectory=$workingfolder/djangoapp
+
+ExecStart=$workingfolder/venv/bin/gunicorn --access-logfile - --workers 3 --bind unix:/run/gunicorn.sock djangoapp.wsgi:application
 
 [Install]
-WantedBy=multi-user.target
-
-
-EOL
-	
-fi
-
-
-if [ -f /etc/systemd/system/gunicorn.service]; then
-cat >>/etc/systemd/system/gunicorn.service <<EOL
-
-[Service]
-User=${user}
-Group=${user}
-WorkingDirectory=${docroot}/djangoapp
-ExecStart=${docroot}/venv/bin/gunicorn \
-          --access-logfile - \
-          --workers 3 \
-          --bind unix:/run/gunicorn.sock \
-          djangoapp.wsgi:application
-
-[Install]
-WantedBy=multi-user.target
-
-EOL
+WantedBy=multi-user.target" > /etc/systemd/system/gunicorn.service
 
 fi
 
 systemctl restart gunicorn.socket
+
 systemctl start gunicorn.socket
+
 systemctl enable gunicorn.socket
 
+# Start the socket
 curl --unix-socket /run/gunicorn.sock localhost
 
 sudo systemctl daemon-reload
+
 sudo systemctl restart gunicorn
-
-
-deactivate
-
-if [ ! -f $docroot/.htaccess ]; then
-echo "RewriteEngine On
-
-RewriteCond %{HTTP_HOST} ^www.$2\.ru\$ [NC]
-RewriteRule ^(.*)\$ http://$2/\$1 [R=301,L]
-
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule ^(.*)\$ /djangoapp/app.wsgi/\$1 [QSA,PT,L]" > $docroot/.htaccess
-chown $user:$user $docroot/.htaccess
-fi
-
-
-echo "Remember to complete the app setup process! Also, check the content of the file etc/systemd/system/gunicorn.service" > $docroot/help
 
 exit 0

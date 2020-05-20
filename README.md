@@ -21,8 +21,10 @@ I presume it can be adapted to VestaCP after small modifications.
 
 ## Tested with
 
+- [X] HestiaCP 1.1.1
 - [X] Ubuntu 18.04
 - [X] Python 3.6.9
+
 
 If you have tested it with a different version or different distro, feel free to contact me to provide feedback.
 

@@ -23,10 +23,6 @@
         Options +Includes -Indexes +ExecCGI
     </Directory>
 
-    <FilesMatch \.php$>
-        SetHandler "proxy:%backend_lsnr%|fcgi://localhost"
-    </FilesMatch>
-    
     SetEnvIf Authorization .+ HTTP_AUTHORIZATION=$0
 
     ProxyPass / https://localhost:8000
