@@ -49,4 +49,4 @@ python3 -m pip install --upgrade pip
 
 5. Activate the desired Apache2 template. It is recommended to set the backend template to `no-php`.
 
-6. Complete the setup process of the terminal. This includes setting up the database, adding the user, and so on.
+6. Complete the setup process of the terminal. This includes setting up the database, adding the users, disabling the debug/setting environment to production, modifying the allowed hosts, and so on.
