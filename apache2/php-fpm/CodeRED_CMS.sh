@@ -20,33 +20,38 @@ virtualenv -p python3 venv
 source venv/bin/activate
 
 # Install Django and Gunicorn
-pip install django gunicorn psycopg2-binary
+pip install coderedcms gunicorn psycopg2-binary
 
 # Create the Django project
-django-admin startproject djangoapp
+coderedcms start cr_cms
 
-# Django does not have a requirements.txt file
-# Install requirements.txt in case one is given by the user in
+# Install requirements.txt in case one is available
 # the working folder
-if [ -f "$workingfolder/djangoapp/requirements.txt" ]; then
+if [ -f "$workingfolder/cr_cms/requirements.txt" ]; then
 
-     pip install -r /home/$user/web/$domain/djangoapp/requirements.txt
+     pip install -r /home/$user/web/$domain/cr_cms/requirements.txt
 
 fi
 
 # Make Django migration and  change ownership of the created SQLite database
-cd djangoapp
-./manage.py makemigrations && ./manage.py migrate
+cd cr_cms
+python manage.py makemigrations && python manage.py migrate
 chown $user:$user db.sqlite3
 
-# Add static folder and run collectstatic
-echo "
-STATIC_ROOT = os.path.join(BASE_DIR, 'static/')" >> $workingfolder/djangoapp/djangoapp/settings.py
-
-./manage.py collectstatic
+# Add static and media folder and run collectstatic
+mkdir static
+chmod 755 static
+chown $user:$user static
+mkdir static/CACHE
+chmod 755 static/CACHE
+chown $user:$user static/CACHE
+mkdir media
+chmod 755 media
+chown $user:$user media
+python manage.py collectstatic
 
 # At this stage you can test that it works executing:
-# gunicorn -b 0.0.0.0:8000 djangoapp.wsgi:application
+# gunicorn -b 0.0.0.0:8000 cr_cms.wsgi:application
 # *after* adding your domain to ALLOWED_HOSTS
 
 # This following part adds Gunicorn socket and service,
@@ -79,26 +84,26 @@ After=network.target
 [Service]
 User=$user
 Group=$user
-WorkingDirectory=$workingfolder/djangoapp
+WorkingDirectory=$workingfolder/cr_cms
 
-ExecStart=$workingfolder/venv/bin/gunicorn --access-logfile - --workers 3 --bind unix:/run/$domain-gunicorn.sock -m 007 djangoapp.wsgi:application
+ExecStart=$workingfolder/venv/bin/gunicorn --access-logfile - --workers 3 --bind unix:/run/$domain-gunicorn.sock -m 007 cr_cms.wsgi:application
 
 [Install]
 WantedBy=multi-user.target" > /etc/systemd/system/$domain-gunicorn.service
 
 fi
 
-systemctl restart $domain-gunicorn.socket
+
+systemctl enable $domain-gunicorn.socket
 
 systemctl start $domain-gunicorn.socket
 
-systemctl enable $domain-gunicorn.socket
 
 # Start the socket
 curl --unix-socket /run/$domain-gunicorn.sock localhost
 
 sudo systemctl daemon-reload
 
-sudo systemctl restart gunicorn
+sudo systemctl restart $domain-gunicorn
 
 exit 0

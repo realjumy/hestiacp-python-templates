@@ -42,11 +42,11 @@ python3 -m pip install --upgrade pip
 3. Download the templates to the correct location:
 
 - Apache2 templates goes into `/usr/local/hestia/data/templates/web/apache2/php-fpm/`
-- Chage he permissions to `Django_app.sh` using the command `chmod +x wsgi_django.sh`
+- Chage he permissions to `.sh` files using the command `chmod +x *.sh` in the `/usr/local/hestia/data/templates/web/apache2/php-fpm/` folder.
 - NGINX templates goes into `/usr/local/hestia/data/templates/web/nginx/`
 
 4. Activate the template NGINX proxy template
 
-5. Activate the Apache2 template
+5. Activate the desired Apache2 template. It is recommended to set the backend template to `no-php`.
 
-6. Complete the Django setup process
+6. Complete the setup process of the terminal. This includes setting up the database, adding the user, and so on.
